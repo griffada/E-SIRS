@@ -161,17 +161,22 @@ siStrainNT<- function(beta=2, gamma=1, theta=0.01, N=25, t.max=100, M=100, t.ste
     
     
     ## see uI(k) = \sum_m=1^M w^{(m)} I_k^(m)/|I|^(m)
-    uI <- (samples[1,,]/(rep(1,N)%*%samples[1,,]))%*%samples.w 
+    Irep <- matrix(rep(rep(1,N)%*%samples[1,,], each=N), nrow=N)
+    uI <- (samples[1,,]/Irep)%*%samples.w 
     
     ### uK(k) = \sum_m=1^M w^{(m)} (I_k^(m) + S_k^(m) + R_k^(m))/N
     uK <- t(samples[1,,] %*% t(samples.w/(rep(1,N) %*% samples[1,,])))
     
     
-    ### uL(j) = \sum_m=1^M w^(m) \sum_{j<k} (I_k^(m) + S_k^(m) + R_k^(m)/N
-    uL <- apply(((samples[1,N:1,] + samples[2,N:1,]) * 1/N), 2, function(x){c(rev(cumsum(x[2:length(x)])),0)}) %*% samples.w
+    ### uL(j) = \sum_m=1^M w^(m) \sum_{j<k} (I_k^(m) + S_k^(m) + R_k^(m))/N
+    Kback <- samples[,(N:1),]
+    revcumsum <- function(x){c(rev(cumsum(x[1:(length(x)-1)])),0)}
+    uL <- apply(((samples[1,N:1,] + samples[2,N:1,]) * 1/N),
+                2,
+                function(x){c(rev(cumsum(x[2:length(x)])),0)}) %*% samples.w
     
     ### R_Q
-    rq <- beta*(theta + (1-theta)*(uL %*% uI))/gamma
+    rq <- beta*(theta + (1-theta)*(t(uL) %*% uI))/gamma
     
     iw[4] <- rq
     #write samples table

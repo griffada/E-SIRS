@@ -206,7 +206,7 @@ sirStrainNT <- function(beta=2, gamma=1, delta=0.5, theta=0.01, N=25, t.max=100,
     
     
     ### uL(j) = \sum_m=1^M w^(m) \sum_{j<k} (I_k^(m) + S_k^(m) + R_k^(m)/N
-    uL <- apply(((samples[1,N:2,] + samples[2,N:2,]) + samples[3,N:2,] * 1/N), 2, function(x){c(rev(cumsum(x),0))}) %*% samples.w
+    uL <- apply((samples[1,N:2,] + samples[2,N:2,] + samples[3,N:2,]) * 1/N), 2, function(x){c(rev(cumsum(x),0))}) %*% samples.w
     
     ### R_Q
     iw[4] <- beta*(theta + (1-theta)*(uL %*% uI))/gamma
