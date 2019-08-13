@@ -198,19 +198,17 @@ sirStrainNT <- function(beta=2, gamma=1, delta=0.5, theta=0.01, N=25, t.max=100,
     #iw[6] <- {(1 / (N * K)) * {(rep(1, N)%*%(samples[3,,] * B)) + (I * (K - 1)) + (R * K)}} %*% samples.w #rhoK
     #iw[7] <- R0 #r0
     
-    ## see uI(k) = \sum_m=1^M w^{(m)} I_k^(m)/|I|^(m)
-    uI <- (samples[1,,]/(rep(1,N)%*%samples[1,,]))%*%samples.w 
+    Irep <- matrix(rep(rep(1,N)%*%samples[1,,], each=N), nrow=N)
+    uI <- (samples[1,,]/Irep)%*%samples.w
     
-    ### uK(k) = \sum_m=1^M w^{(m)} (I_k^(m) + S_k^(m) + R_k^(m))/N
-    uK <- t(samples[1,,] %*% t(samples.w/(rep(1,N) %*% samples[1,,])))
-    
-    
-    ### uL(j) = \sum_m=1^M w^(m) \sum_{j<k} (I_k^(m) + S_k^(m) + R_k^(m)/N
-    uL <- apply((samples[1,N:2,] + samples[2,N:2,] + samples[3,N:2,]) * 1/N), 2, function(x){c(rev(cumsum(x),0))}) %*% samples.w
+    ### uL(j) = \sum_m=1^M w^(m) \sum_{j<k} (I_k^(m) + S_k^(m) + R_k^(m))/N
+    Kback <- samples[1,(N:1),] + samples[2,(N:1),] + samples[3,(N:1),]
+    revcumsum <- function(x){c(rev(cumsum(x[1:(length(x)-1)])), 0)}
+    uL <- (1/N) * (apply(Kback, 2, revcumsum) %*% samples.w)
     
     ### R_Q
-    iw[4] <- beta*(theta + (1-theta)*(uL %*% uI))/gamma
-    
+    rq <- beta*(theta + (1-theta)*(t(uL) %*% uI))/gamma
+    iw[4] <- rq
     
     if(csv){
         write.csv(cbind(matrix(aperm(samples,c(3,1,2)),nrow=length(samples.w), ncol=3*N),matrix(samples.w, ncol=1)), 
